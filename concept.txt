@@ -1,0 +1,100 @@
+[open2fa_login.py]
+
+class MainSession(self):
+	def verify(basecommand):
+	        def is_exe(checkpath):
+	def proceed():
+	def fail():
+
+
+class User(self):
+	def getUser():
+		//requests all options and a scalar from (whatever I rename preauth to)
+		// sends 'command.py getUser nick 1001'
+		// retrieves in json format, and puts each item in a dictionary like so.
+			usermeta = json.loads(indata)['usermeta']
+			userstatus = json.loads(indata)['userstatus']
+			//usermeta = { sms:5555555555@txt.att.net, email:email@address.net etc... }
+			userinfo['metaname']
+		// the program fails, set override to 1 and print a message like "open2fa isn't set up correctly. something went wrong while executing command.py, This machine is not at optimal safety. exiting with 2factor disabled!"
+
+	def build_menu(userinfo):
+		// takes all items in self.getOpts() and asks user for the choice.
+
+	def isOverride(self)
+	def isDisabled(self)
+
+//logic
+session = MainSession()
+session.verify()
+myuser = User()
+myuser.getUser()
+if myuser.isOverride()
+	session.proceed()
+elif myuser.isDisabled()
+	session.fail()
+else
+	session.buildmenu()
+
+
+
+
+
+[open2fa_preauth.py]
+overview: argset 1 'requestmeta nick 1001'
+		returns json something like { 
+
+
+
+
+
+
+
+
+// evaluate arguments
+request can either be 'send' or 'ask'
+//compare parent to requested ID
+def readconf()
+connectOrder = //a comma separatead list of connection profiles to try to get userinfo from
+
+
+class Connector
+	read('userdefined')
+	connect('connectionmethod')
+	sanitycheck() ??
+	status()
+		returns true or false
+	
+
+for connectmethods in connectOrder:
+	if connected != 1
+	try:
+		request = Connector()
+		request.read(connectmethods)
+		connected = 1 if request.status		
+if connected != 1
+	fail open
+
+
+
+
+
+
+
+##################################################################
+[open2fa_sendrequest.py]
+	def readconf():
+	def get_userinfo_local(data_source,data_location,errhandle_nouser,errhandle_scriptfail,errhandle_networkfail):
+	def get_userinfo_ldaps():
+	def get_userinfo_mysql():
+	def get_userinfo_n2faservice():
+	def send_by_email(mailto,tok):
+	def gentoken():
+
+
+[open2fa_preauthclasses.py]
+		def readconf(self):
+		def connect(self):
+		def getUserInfo(self):
+
+
