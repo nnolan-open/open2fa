@@ -2,6 +2,7 @@
 
 from random import randint
 import os,sys,smtplib,hashlib,ConfigParser
+import json 
 wpath = '/home/nick/nnolan-open_git/open2fa'
 cfgfile = wpath + '/etc/open2fa.cfg'
 cfg = ConfigParser.RawConfigParser()
@@ -125,28 +126,27 @@ def send_by_email(mailto,tok):
 
 def gentoken():
 	tok = randint(100000,999999)
-	hash_objm = hashlib.sha256(str(tok))
-	hash_obj = hash_objm.hexdigest()
-	print(hash_obj)
+	Hash_objm = hashlib.sha256(str(tok))
+	Hash_obj = Hash_objm.hexdigest()
+	Hash_obj_json = { 'tokenHash': Hash_obj }
+	print(str(json.dumps(Hash_obj_json)))
+#	print(Hash_obj)
 	return tok
 
 
 
 myconf = readconf()
 userdetails = userinfo_local(*myconf)
-#print myconf
-#print userdetails
 if str(sendmethod) == 'sms':
 	emailto = userdetails.getsms()
 	#emailto = cellphone + '@' + smsprovider # cellphone + '@' + smsprovider
 	tok = gentoken()
-#	send_by_email(emailto, tok)
-	print(str(tok))
+	send_by_email(emailto, tok)
+
 elif str(sendmethod) == 'email':
 	emailto = userdetails.getemail()
 	tok = gentoken()
-#	send_by_email(emailto, tok)
-
+	send_by_email(emailto, tok)
 
 
 

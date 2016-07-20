@@ -22,7 +22,6 @@ class UserSession():
 		#
 		try:
 			# Get the SSH_ORIGINAL_COMMAND and put it into a list.
-			#SSH_ORIGINAL_COMMAND = 'ls -ltsh /home/nick/'
 			SSH_ORIGINAL_COMMAND = os.environ.get('SSH_ORIGINAL_COMMAND')
 			if SSH_ORIGINAL_COMMAND == '':
 				self.CommandList = [ ushell ]
@@ -149,7 +148,7 @@ if Request.isoverride() == True:
 	print('User has been granted override')
 	SSHEnv.ProceedToShell()
 elif Request.isdisabled():
-	SSHEnv.failclosed()
+	SSHEnv.FailClosed()
 authopts = Request.ListOpts()
 UI = MenuInterface(authopts)
 choice = UI.BuildMenu()
@@ -163,35 +162,36 @@ requestcommand = wpath + '/bin/open2fa_sendrequest.py'
 #requeststring = ' '.join(['send', str(choice), str(username), str(uid)])
 #print('DEBUG: requeststring is ' + requeststring )
 
-try:
-#       tok = str(subprocess.check_output([requestcommand, requeststring])).rstrip() this doesn't work. treats request string on cli as one quoted argument
-        tok = str(subprocess.check_output([requestcommand, 'send', str(choice), str(username), str(uid) ])).rstrip()
-	if type(tok) is not str:
-		tok = str(tok.decode())
+try:	
+	RawTokenData = subprocess.check_output([requestcommand, 'send', str(choice), str(username), str(uid) ]).rstrip()
+	if type(RawTokenData) is not str:
+		RawTokenData = RawTokenData.decode()
+	TokenData = json.loads(RawTokenData)
+	tok = TokenData['tokenHash']
 except:
-        print('something went wrong')
-        exit(2)
+	print('something went wrong')
+	exit(2)
 hash_obj = '**'
 attempt = 0
 while attempt < 3 and str(hash_obj) != str(tok):
 
-        try:
-                try:
-                        assert sys.versioninfo[0] == 2
-                        auth_attempt = int(raw_input('input: '))
-                        hash_objm = hashlib.sha256(str(auth_attempt))
-                        hash_obj = hash_objm.hexdigest()
-                        attempt += 1
-                except:
-                        auth_attempt = int(input('input: '))
-                        hash_objm = hashlib.sha256(str(auth_attempt))
-                        hash_obj = hash_objm.hexdigest()
-                        attempt += 1
-        except:
-                attempt += 1
+	try:
+		try:
+			assert sys.versioninfo[0] == 2
+			auth_attempt = int(raw_input('input: '))
+			hash_objm = hashlib.sha256(str(auth_attempt))
+			hash_obj = hash_objm.hexdigest()
+			attempt += 1
+		except:
+			auth_attempt = int(input('input: '))
+			hash_objm = hashlib.sha256(str(auth_attempt))
+			hash_obj = hash_objm.hexdigest()
+			attempt += 1
+	except:
+		attempt += 1
 
 if attempt < 3:
-        SSHEnv.ProceedToShell()
+	SSHEnv.ProceedToShell()
 exit(0)
 
 
