@@ -130,7 +130,7 @@ class MenuInterface():
 				self.choice = 0
 			self.usertries += 1
 			#print('DEBUG: self.choice = ' + str(self.choice) + ', self.usertries = ' + str(self.usertries) + ', self.counter = ' + str(self.counter) )
-			if self.choice in range(1,int(self.counter)):
+			#if self.choice in range(1,int(self.counter)):
 				#print('DEBUG: return should be:' + str(self.AvailableOpts[self.choice -1]) )
 		if not self.choice in range(1,int(self.counter)) and self.usertries >= 3: #or might be good, but if user chooses correctly on last one, may get false positive 
 			print('too many invalid choices made')
