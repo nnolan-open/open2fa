@@ -3,10 +3,32 @@
 from random import randint
 import os,sys,smtplib,hashlib,ConfigParser
 import json 
-wpath = '/home/nick/nnolan-open_git/open2fa'
-cfgfile = wpath + '/etc/open2fa.cfg'
+wpath = '/usr/local'
+
+#try to find cfgpath. check etc:/usr/local/etc:<binpath>/conf
+binpath = os.path.dirname(os.path.abspath(__file__))
+
+etcpaths = { '/etc', '/usr/local/etc', str(binpath) + '/conf' }
+
+# XXX temporary hardcode
+etcpath = '/usr/local/etc'
+cfg_file = 'open2fa.cfg'
+
+
+#kind of a convoluted check, but we want to get the first instance, so we use break
+for path in etcpaths:
+        if os.access(str(path + '/' + cfg_file), os.R_OK):
+                etcpath = str(path)
+        if etcpath:
+                break
+if not etcpath:
+        exit(30)
+
+
+cfgfile = etcpath + '/' + cfg_file
 cfg = ConfigParser.RawConfigParser()
 cfg.read(cfgfile)
+
 
 
 try:
@@ -32,13 +54,13 @@ elif request == 'sendwait':
 
 def readconf():
 	data_source = cfg.get('general', 'data_source')
-	data_location = cfg.get('general', 'data_location')
+	data_file = cfg.get('general', 'data_file')
 	errhandle_nouser = cfg.get('errhandle', 'nouser')
 	errhandle_scriptfail = cfg.get('errhandle', 'scriptfail')
 	errhandle_networkfail = cfg.get('errhandle', 'networkfail')
 	# it is here that we will determine what parameters will be needed for each backend type
 	if data_source == 'local':
-		return data_source,data_location,errhandle_nouser,errhandle_scriptfail,errhandle_networkfail
+		return data_source,data_file,errhandle_nouser,errhandle_scriptfail,errhandle_networkfail
 	elif data_source == 'mysql':
 		print('nothing yet')
 	elif data_source == 'ldaps':
@@ -54,14 +76,14 @@ def readconf():
 
 ########################################################
 class userinfo_local():
-	def __init__(self,data_source,data_location,errhandle_nouser,errhandle_scriptfail,errhandle_networkfail):
+	def __init__(self,data_source,data_file,errhandle_nouser,errhandle_scriptfail,errhandle_networkfail):
 		try:
-			passmfa = wpath + str(data_location)
+			passmfa = str(etcpath) + '/' + str(data_file)
 			fh = open(passmfa, 'r')
 			self.lockin = 0
 		except:
 			override = int(errhandle_scriptfail) # todo... replace with errhandle failopen
-			return 'none'
+			return None
 			fh.close
 		for line in fh:
 			self.fields = line.split(':')

@@ -3,8 +3,20 @@
 
 import sys,os,hashlib,subprocess,pwd
 import json
-#set your working path. (the level where you have bin/ and etc/
-wpath = '/home/nick/nnolan-open_git/open2fa'
+
+
+#old set bin path manually. moving to binpath and etcpath
+wpath = '/usr/local/'
+
+#try to find cfgpath. check etc:/usr/local/etc:<binpath>/conf
+binpath = os.path.dirname(os.path.abspath(__file__))
+
+etcpaths = { '/etc', '/usr/local/etc', str(binpath) + '/conf' }
+#while not etcpath:
+
+
+
+
 username = str(pwd.getpwuid(os.getuid())[ 0 ])
 uid = int(os.getuid())
 ushell = str(pwd.getpwuid(os.getuid())[ 6 ])
@@ -71,7 +83,7 @@ class UserSession():
 
 class UserAuthRequester():
 	def __init__(self):
-		self.RequestExe = wpath + '/bin/open2fa_jsonrequester.py'
+		self.RequestExe = binpath + '/open2fa_jsonrequester.py'
 		self.RequestArgs = str(username) + str(uid)
 		self.RawUserMeta = subprocess.check_output([self.RequestExe, self.RequestArgs]).rstrip()
 		#todo: add a fail:<open/close> in the json return. if a key is called 'fail' then fail
@@ -158,7 +170,7 @@ print('you chose:' + str(choice))
 ################################################################
 #   everything beyond here needs to be moved into a class def  #
 ################################################################
-requestcommand = wpath + '/bin/open2fa_sendrequest.py'
+requestcommand = binpath + '/open2fa_sendrequest.py'
 #requeststring = ' '.join(['send', str(choice), str(username), str(uid)])
 #print('DEBUG: requeststring is ' + requeststring )
 
