@@ -4,22 +4,16 @@
 import sys,os,hashlib,subprocess,pwd
 import json
 
-
-#old set bin path manually. moving to binpath and etcpath
-wpath = '/usr/local/'
-
 #try to find cfgpath. check etc:/usr/local/etc:<binpath>/conf
 binpath = os.path.dirname(os.path.abspath(__file__))
 
 etcpaths = { '/etc', '/usr/local/etc', str(binpath) + '/conf' }
 #while not etcpath:
 
-
-
-
 username = str(pwd.getpwuid(os.getuid())[ 0 ])
 uid = int(os.getuid())
 ushell = str(pwd.getpwuid(os.getuid())[ 6 ])
+
 
 class UserSession():
 	def __init__(self):
@@ -76,6 +70,7 @@ class UserSession():
 		print('')
 	def FailOpen(self):
 		#log()
+		#todo print this to stderr
 		print('WARNING: Something went wrong and Open2fa is failing open. This system may not be in an ideal state of security')
 		os.execl(self.FullPathCMD, *self.CommandList)
 		exit(1)
@@ -83,9 +78,11 @@ class UserSession():
 
 class UserAuthRequester():
 	def __init__(self):
-		self.RequestExe = binpath + '/open2fa_jsonrequester.py'
-		self.RequestArgs = str(username) + str(uid)
-		self.RawUserMeta = subprocess.check_output([self.RequestExe, self.RequestArgs]).rstrip()
+		self.RequestExe = binpath + '/open2fa_worker.py'
+		self.RequestArgs = ['request', '--user', str(username), '--uid', str(uid)]
+		#self.RequestArgs = str(username) + ' '+ str(uid)
+		# want to just make them both list, or one list....
+		self.RawUserMeta = subprocess.check_output(list([self.RequestExe]) + self.RequestArgs).rstrip()
 		#todo: add a fail:<open/close> in the json return. if a key is called 'fail' then fail
 		# perhaps it would be better to do is type bytes in stead?
 		# decode() without args defaults. 'utf-8' works too
@@ -100,12 +97,12 @@ class UserAuthRequester():
 		return list(dict.keys(self.UserMeta['useropts']))
 	def SendAuth(self,ChosenOpt):
 		print('nothing')
-	def isoverride(self):
+	def IsOverride(self):
 		try:
 			return int(self.UserMeta['userstatus']['override']) == 1
 		except:
 			return False
-	def isdisabled(self):
+	def IsDisabled(self):
 		try:
 			return int(self.UserMeta['userstatus']['override']) == 2
 		except:
@@ -156,10 +153,10 @@ class MenuInterface():
 Request = UserAuthRequester()
 SSHEnv = UserSession()
 ValidSession = SSHEnv.ValidateShell()
-if Request.isoverride() == True:
+if Request.IsOverride() == True:
 	print('User has been granted override')
 	SSHEnv.ProceedToShell()
-elif Request.isdisabled():
+elif Request.IsDisabled():
 	SSHEnv.FailClosed()
 authopts = Request.ListOpts()
 UI = MenuInterface(authopts)
@@ -170,12 +167,13 @@ print('you chose:' + str(choice))
 ################################################################
 #   everything beyond here needs to be moved into a class def  #
 ################################################################
-requestcommand = binpath + '/open2fa_sendrequest.py'
+requestcommand = binpath + '/open2fa_worker.py'
 #requeststring = ' '.join(['send', str(choice), str(username), str(uid)])
 #print('DEBUG: requeststring is ' + requeststring )
 
+send_requestArgs = ['send', '--user', str(username), '--uid', str(uid), '--type', str(choice) ]
 try:	
-	RawTokenData = subprocess.check_output([requestcommand, 'send', str(choice), str(username), str(uid) ]).rstrip()
+	RawTokenData = subprocess.check_output(list([requestcommand]) + send_requestArgs).rstrip()
 	if type(RawTokenData) is not str:
 		RawTokenData = RawTokenData.decode()
 	TokenData = json.loads(RawTokenData)

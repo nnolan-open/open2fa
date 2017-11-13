@@ -1,0 +1,3 @@
+0 = no override, proceed with check
+1 = user has been granted override. don't 2fa
+2 = user has been specifically blocked from authenticating
