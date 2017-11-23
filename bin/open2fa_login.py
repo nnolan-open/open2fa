@@ -2,6 +2,7 @@
 
 
 import sys,os,hashlib,subprocess,pwd
+import argparse
 import json
 
 #try to find cfgpath. check etc:/usr/local/etc:<binpath>/conf
@@ -13,6 +14,31 @@ etcpaths = { '/etc', '/usr/local/etc', str(binpath) + '/conf' }
 username = str(pwd.getpwuid(os.getuid())[ 0 ])
 uid = int(os.getuid())
 ushell = str(pwd.getpwuid(os.getuid())[ 6 ])
+
+# sudo for linux and modern FreeBSD
+# doas for openbsd
+# pfexec for solaris
+# need to find something for netbsd
+# pkexec is also available on linux, but I haven't played with it.
+# need to look into RBAC for AIX, and SAM for HPUX. not sure if these have pre-callers
+# lastly, if the system permits suid on scripts through a fd handle... only HPUX and some BSDs seem to do this.
+polkits = ['sudo','pfexec','pkexec','doas',]
+a = argparse.ArgumentParser(description='')
+a.add_argument('--policykit', dest='polkit', type=str, required=False, choices=polkits)
+args = a.parse_args()
+
+polkit = str(vars(args)['polkit'])
+privuser = 'open2fa'
+if polkit is None:
+	worker = [ binpath + '/open2fa_worker.py']
+elif polkit == 'sudo':
+	worker = [ 'sudo', '-u', privuser, binpath + '/open2fa_worker.py' ]
+elif polkit == 'pkexec':
+	worker = [ 'pkexec', '--user', privuser, binpath + '/open2fa_worker.py' ]
+else:
+	print('the policy kit ' + polkit + ' is not configured yet.')
+	worker = [ binpath + '/open2fa_worker.py']
+del privuser
 
 
 class UserSession():
@@ -77,12 +103,16 @@ class UserSession():
 
 
 class UserAuthRequester():
-	def __init__(self):
-		self.RequestExe = binpath + '/open2fa_worker.py'
+	def __init__(self,worker):
+		#self.priv = ['sudo', '-u' 'open2fa']
+		#priv = ['pfexec']
+		#priv = ['pkexec']
+		#self.RequestExe = binpath + '/open2fa_worker.py'
 		self.RequestArgs = ['request', '--user', str(username), '--uid', str(uid)]
 		#self.RequestArgs = str(username) + ' '+ str(uid)
 		# want to just make them both list, or one list....
-		self.RawUserMeta = subprocess.check_output(list([self.RequestExe]) + self.RequestArgs).rstrip()
+		# need to make priv a global and reference it.
+		self.RawUserMeta = subprocess.check_output(worker + self.RequestArgs).rstrip()
 		#todo: add a fail:<open/close> in the json return. if a key is called 'fail' then fail
 		# perhaps it would be better to do is type bytes in stead?
 		# decode() without args defaults. 'utf-8' works too
@@ -150,7 +180,7 @@ class MenuInterface():
 	def RemoveItem(self):
 		print('nothing')
 
-Request = UserAuthRequester()
+Request = UserAuthRequester(worker)
 SSHEnv = UserSession()
 ValidSession = SSHEnv.ValidateShell()
 if Request.IsOverride() == True:
@@ -172,8 +202,9 @@ requestcommand = binpath + '/open2fa_worker.py'
 #print('DEBUG: requeststring is ' + requeststring )
 
 send_requestArgs = ['send', '--user', str(username), '--uid', str(uid), '--type', str(choice) ]
-try:	
-	RawTokenData = subprocess.check_output(list([requestcommand]) + send_requestArgs).rstrip()
+try:
+	# need to make priv a global and reference it. If priv is [], will it work?	
+	RawTokenData = subprocess.check_output( worker + send_requestArgs).rstrip()
 	if type(RawTokenData) is not str:
 		RawTokenData = RawTokenData.decode()
 	TokenData = json.loads(RawTokenData)
@@ -187,6 +218,8 @@ while attempt < 3 and str(hash_obj) != str(tok):
 
 	try:
 		try:
+			# This assert doesn't really work anyway.
+			# 
 			assert sys.versioninfo[0] == 2
 			auth_attempt = int(raw_input('input: '))
 			hash_objm = hashlib.sha256(str(auth_attempt))

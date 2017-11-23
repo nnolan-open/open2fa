@@ -146,7 +146,7 @@ class Authenticator():#TODODODODODO! FIX ALL OF THIS
                 smtpserver.starttls()
                 smtpserver.ehlo
                 smtpserver.login(mailfields['user'], mailfields['pwd'])
-                header = 'To:' + to + '\n' + 'From: ' + mailfields['user'] + '\n' + 'Subject: Open2fa smtp\n'
+                header = 'To:' + to + '\n' + 'From: ' + mailfields['user'] + '\n' + 'Subject: -  Open2fa smtp\n'
                 msg = header + '\n\n Code: ' + str(tok) + '\n'
                 smtpserver.sendmail(mailfields['user'], to, msg)
                 smtpserver.close()
@@ -157,7 +157,6 @@ class Authenticator():#TODODODODODO! FIX ALL OF THIS
 		Hash_obj = Hash_objm.hexdigest()
 		Hash_obj_json = { 'tokenHash': Hash_obj }
 		print(str(json.dumps(Hash_obj_json)))
-		#print(Hash_obj)
 		return tok
 	def verify_autharg(autharg):
 		pass
@@ -176,16 +175,28 @@ args = a.parse_args()
 #task = str(args.task)
 task = str(vars(args)['task'])
 
+# we will try to add more policy kit checking here soon... perhaps pkexec and pfexec
+try:
+	# our best effort attempt is to make it so that even if you call this as sudo for the intended service user, it treats you as the user.
+	# if the user can call true sudo, we let them be root.... We at open2fa don't set this up in /etc/sudoers.d/open2fa_sudoers or any other pol kit 
+	assert str(pwd.getpwuid(os.getuid())[ 0 ]) == 'open2fa'
+	checkuid = int(os.environ['SUDO_UID'])
+except:
+	checkuid = int(os.geteuid())
+
+
 #note, these are available on Windows, if the scri
 #import getpass
 #getpass.getuser()
 # for now, I want to make sure it's only listening to a users demands if it's root. otherwise, only enable a user to call themself.
-if os.geteuid() != 0:
-	uid = int(os.getuid())
-	username = str(pwd.getpwuid(os.getuid())[ 0 ])
-else:
+if checkuid == 0: 
 	uid = vars(args)['uid']
 	username = vars(args)['username']
+else:
+	uid = int(checkuid)
+	username = str(pwd.getpwuid(checkuid)[ 0 ])
+del checkuid
+
 requesttype = vars(args)['rtype']
 autharg = vars(args)['autharg']
 
