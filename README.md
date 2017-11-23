@@ -4,7 +4,6 @@ The basic of this is to have open2fa_login.py as the primary login script, set w
 
 Supporting files are separated to reduce vulnerability. The login script never knows the actual key sent to sms. It is instead given a hash of it by open2fa_worker.py
 
-Currently, the worker can be executable to all and the config files readable to all, or 
 ### local login and MySQL actualy works with sms and email. Still working on TOTP and other methods.
 
 To configure(assuming in git directory):
