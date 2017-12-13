@@ -161,6 +161,7 @@ class MenuInterface():
 				try:
 					assert sys.version_info[0] == 3
 					self.choice = int(input('Please choose an option: '))
+
 				except:
 					self.choice = int(raw_input('Please choose an option: '))
 
@@ -218,15 +219,13 @@ while attempt < 3 and str(hash_obj) != str(tok):
 
 	try:
 		try:
-			# This assert doesn't really work anyway.
-			# 
-			assert sys.versioninfo[0] == 2
-			auth_attempt = int(raw_input('input: '))
+			assert sys.version_info[0] == 3
+			auth_attempt = int(input('input: '))
 			hash_objm = hashlib.sha256(str(auth_attempt))
 			hash_obj = hash_objm.hexdigest()
 			attempt += 1
 		except:
-			auth_attempt = int(input('input: '))
+			auth_attempt = int(raw_input('input: '))
 			hash_objm = hashlib.sha256(str(auth_attempt))
 			hash_obj = hash_objm.hexdigest()
 			attempt += 1
